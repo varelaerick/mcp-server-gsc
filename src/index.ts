@@ -60,26 +60,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (request.params.name) {
       case 'search_analytics': {
         const args = SearchAnalyticsSchema.parse(request.params.arguments);
-        const response = await webmasters.searchanalytics.query({
-          siteUrl: args.siteUrl,
-          requestBody: {
-            startDate: args.startDate,
-            endDate: args.endDate,
-            dimensions: args.dimensions,
-            searchType: args.type,
-            aggregationType: args.aggregationType,
-            rowLimit: args.rowLimit,
-          },
-        });
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data, null, 2),
-            },
-          ],
+        const requestBody = {
+          startDate: args.startDate,
+          endDate: args.endDate,
+          dimensions: args.dimensions,
+          searchType: args.type,
+          aggregationType: args.aggregationType,
+          rowLimit: args.rowLimit,
         };
+
+        try {
+          const response = await webmasters.searchanalytics.query({
+            siteUrl: args.siteUrl,
+            requestBody,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(response.data, null, 2),
+              },
+            ],
+          };
+        } catch (err) {
+          if (err instanceof Error && err.message.includes('sufficient permission for site')) {
+            let siteUrl = new URL(args.siteUrl);
+            if (siteUrl.protocol === 'http:' || siteUrl.protocol === 'https:') {
+              siteUrl = new URL('sc-domain:' + siteUrl.hostname);
+            } else {
+              siteUrl = new URL('https://' + siteUrl.toString());
+            }
+
+            const response = await webmasters.searchanalytics.query({
+              siteUrl: siteUrl.toString(),
+              requestBody,
+            });
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(response.data, null, 2),
+                },
+              ],
+            };
+          }
+          throw err;
+        }
       }
 
       default:

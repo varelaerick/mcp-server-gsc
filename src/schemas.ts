@@ -4,7 +4,7 @@ export const GSCBaseSchema = z.object({
   siteUrl: z
     .string()
     .describe(
-      'The site URL as defined in Search Console. Example: http://www.example.com/ (for site prefix resources) or sc-domain:example.com (for domain resources)',
+      'The site URL as defined in Search Console. Example: sc-domain:example.com (for domain resources) or http://www.example.com/ (for site prefix resources)',
     ),
 });
 
