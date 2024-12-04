@@ -3,11 +3,17 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { google, webmasters_v3 } from 'googleapis';
 // @ts-ignore
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { SearchAnalyticsSchema } from './schemas.js';
+import {
+  GetSitemapSchema,
+  IndexInspectSchema,
+  ListSitemapsSchema,
+  SearchAnalyticsSchema,
+  SubmitSitemapSchema,
+} from './schemas.js';
 import { z } from 'zod';
+import { SearchConsoleService } from './search-console.js';
 
 const server = new Server(
   {
@@ -33,9 +39,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
+        name: 'list_sites',
+        description: 'List all sites in Google Search Console',
+        inputSchema: zodToJsonSchema(z.object({})),
+      },
+      {
         name: 'search_analytics',
         description: 'Get search performance data from Google Search Console',
         inputSchema: zodToJsonSchema(SearchAnalyticsSchema),
+      },
+      {
+        name: 'index_inspect',
+        description: 'Inspect a URL to see if it is indexed or can be indexed',
+        inputSchema: zodToJsonSchema(IndexInspectSchema),
+      },
+      {
+        name: 'list_sitemaps',
+        description: 'List sitemaps for a site in Google Search Console',
+        inputSchema: zodToJsonSchema(ListSitemapsSchema),
+      },
+      {
+        name: 'get_sitemap',
+        description: 'Get a sitemap for a site in Google Search Console',
+        inputSchema: zodToJsonSchema(GetSitemapSchema),
+      },
+      {
+        name: 'submit_sitemap',
+        description: 'Submit a sitemap for a site in Google Search Console',
+        inputSchema: zodToJsonSchema(SubmitSitemapSchema),
       },
     ],
   };
@@ -43,23 +74,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    const auth = new google.auth.GoogleAuth({
-      keyFile: GOOGLE_APPLICATION_CREDENTIALS,
-      scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-    });
-    const authClient = await auth.getClient();
-    const webmasters = google.webmasters({
-      version: 'v3',
-      auth: authClient,
-    } as webmasters_v3.Options);
-
     if (!request.params.arguments) {
       throw new Error('Arguments are required');
     }
 
+    const searchConsole = new SearchConsoleService(GOOGLE_APPLICATION_CREDENTIALS);
+
     switch (request.params.name) {
       case 'search_analytics': {
         const args = SearchAnalyticsSchema.parse(request.params.arguments);
+        const siteUrl = args.siteUrl;
         const requestBody = {
           startDate: args.startDate,
           endDate: args.endDate,
@@ -68,44 +92,96 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           aggregationType: args.aggregationType,
           rowLimit: args.rowLimit,
         };
+        const response = await searchConsole.searchAnalytics(siteUrl, requestBody);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
+      }
 
-        try {
-          const response = await webmasters.searchanalytics.query({
-            siteUrl: args.siteUrl,
-            requestBody,
-          });
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(response.data, null, 2),
-              },
-            ],
-          };
-        } catch (err) {
-          if (err instanceof Error && err.message.includes('sufficient permission for site')) {
-            let siteUrl = new URL(args.siteUrl);
-            if (siteUrl.protocol === 'http:' || siteUrl.protocol === 'https:') {
-              siteUrl = new URL('sc-domain:' + siteUrl.hostname);
-            } else {
-              siteUrl = new URL('https://' + siteUrl.toString());
-            }
+      case 'list_sites': {
+        const response = await searchConsole.listSites();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
+      }
 
-            const response = await webmasters.searchanalytics.query({
-              siteUrl: siteUrl.toString(),
-              requestBody,
-            });
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(response.data, null, 2),
-                },
-              ],
-            };
-          }
-          throw err;
-        }
+      case 'index_inspect': {
+        const args = IndexInspectSchema.parse(request.params.arguments);
+        const requestBody = {
+          siteUrl: args.siteUrl,
+          inspectionUrl: args.inspectionUrl,
+          languageCode: args.languageCode,
+        };
+        const response = await searchConsole.indexInspect(requestBody);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'list_sitemaps': {
+        const args = ListSitemapsSchema.parse(request.params.arguments);
+        const requestBody = {
+          siteUrl: args.siteUrl,
+          sitemapIndex: args.sitemapIndex,
+        };
+        const response = await searchConsole.listSitemaps(requestBody);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_sitemap': {
+        const args = GetSitemapSchema.parse(request.params.arguments);
+        const requestBody = {
+          siteUrl: args.siteUrl,
+          feedpath: args.feedpath,
+        };
+        const response = await searchConsole.getSitemap(requestBody);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'submit_sitemap': {
+        const args = SubmitSitemapSchema.parse(request.params.arguments);
+        const requestBody = {
+          siteUrl: args.siteUrl,
+          feedpath: args.feedpath,
+        };
+        const response = await searchConsole.submitSitemap(requestBody);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
       }
 
       default:

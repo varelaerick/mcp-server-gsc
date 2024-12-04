@@ -32,4 +32,53 @@ export const SearchAnalyticsSchema = GSCBaseSchema.extend({
   rowLimit: z.number().default(1000).describe('Maximum number of rows to return'),
 });
 
+export const IndexInspectSchema = GSCBaseSchema.extend({
+  inspectionUrl: z
+    .string()
+    .describe(
+      'The fully-qualified URL to inspect. Must be under the property specified in "siteUrl"',
+    ),
+  languageCode: z
+    .string()
+    .optional()
+    .default('en-US')
+    .describe(
+      'An IETF BCP-47 language code representing the language of the requested translated issue messages, such as "en-US" or "de-CH". Default is "en-US"',
+    ),
+});
+
+export const ListSitemapsSchema = z.object({
+  sitemapIndex: z
+    .string()
+    .optional()
+    .describe(
+      "A URL of a site's sitemap index. For example: http://www.example.com/sitemapindex.xml",
+    ),
+  siteUrl: z
+    .string()
+    .optional()
+    .describe("The site's URL, including protocol. For example: http://www.example.com/"),
+});
+
+export const GetSitemapSchema = z.object({
+  feedpath: z
+    .string()
+    .optional()
+    .describe('The URL of the actual sitemap. For example: http://www.example.com/sitemap.xml'),
+  siteUrl: z
+    .string()
+    .optional()
+    .describe("The site's URL, including protocol. For example: http://www.example.com/"),
+});
+
+export const SubmitSitemapSchema = z.object({
+  feedpath: z
+    .string()
+    .describe('The URL of the sitemap to add. For example: http://www.example.com/sitemap.xml'),
+  siteUrl: z
+    .string()
+    .describe("The site's URL, including protocol. For example: http://www.example.com/"),
+});
+
 export type SearchAnalytics = z.infer<typeof SearchAnalyticsSchema>;
+export type IndexInspect = z.infer<typeof IndexInspectSchema>;
