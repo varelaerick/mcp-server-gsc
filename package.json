@@ -1,0 +1,28 @@
+{
+  "name": "@model-context-hub/server-gsc",
+  "version": "1.0.0",
+  "description": "MCP server for using the Google Search Console API",
+  "author": "Yuexun Jiang <yuexunjiang@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "mcp-server-github": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "shx": "^0.3.4",
+    "typescript": "^5.7.2"
+  }
+}
