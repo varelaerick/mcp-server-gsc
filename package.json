@@ -1,7 +1,7 @@
 {
   "name": "mcp-server-gsc",
   "version": "0.1.0",
-  "description": "MCP server for using the Google Search Console API",
+  "description": "A Model Context Protocol (MCP) server providing access to Google Search Console",
   "author": "Yuexun Jiang <yuexunjiang@gmail.com>",
   "license": "MIT",
   "type": "module",
