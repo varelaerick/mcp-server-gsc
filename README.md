@@ -1,4 +1,5 @@
 # Google Search Console MCP Server
+[![smithery badge](https://smithery.ai/badge/mcp-server-gsc)](https://smithery.ai/server/mcp-server-gsc)
 
 A Model Context Protocol (MCP) server providing access to Google Search Console.
 
@@ -15,6 +16,15 @@ A Model Context Protocol (MCP) server providing access to Google Search Console.
 
 ## Installation
 
+### Installing via Smithery
+
+To install Google Search Console for Claude Desktop automatically via [Smithery](https://smithery.ai/server/mcp-server-gsc):
+
+```bash
+npx -y @smithery/cli install mcp-server-gsc --client claude
+```
+
+### Manual Installation
 ```bash
 npm install mcp-server-gsc
 ```
