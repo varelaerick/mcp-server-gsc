@@ -13,10 +13,16 @@ export class SearchConsoleService {
   private auth: GoogleAuth;
 
   constructor(credentials: string) {
-    this.auth = new google.auth.GoogleAuth({
+    const authConfig: any = {
       keyFile: credentials,
       scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-    });
+    };
+
+    if (process.env.GSC_SUBJECT) {
+      authConfig.subject = process.env.GSC_SUBJECT;
+    }
+
+    this.auth = new google.auth.GoogleAuth(authConfig);
   }
 
   private async getWebmasters() {
