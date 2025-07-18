@@ -64,7 +64,8 @@ To obtain Google Search Console API credentials:
       "command": "npx",
       "args": ["-y", "mcp-server-gsc"],
       "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json",
+        "GSC_SUBJECT": "name@example.com"  // optional, if you want to impersonate another user
       }
     }
   }
